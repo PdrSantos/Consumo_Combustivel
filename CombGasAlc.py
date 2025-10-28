@@ -5,11 +5,9 @@ import datetime
 # === Funções de cálculo ===
 
 def calcular_custo_km(preco, consumo):
-    """Calcula o custo por km."""
     return preco / consumo
 
 def calcular_resultado(preco, tipo_consumo, valor, minimo=0, maximo=0):
-    """Retorna custo mínimo e máximo por km com base no tipo de consumo."""
     if tipo_consumo == "fixo":
         custo = calcular_custo_km(preco, valor)
         return (custo, custo)
@@ -19,7 +17,6 @@ def calcular_resultado(preco, tipo_consumo, valor, minimo=0, maximo=0):
         return (custo_min, custo_max)
 
 def comparar_combustivel(custo_etanol, custo_gasolina):
-    """Compara o custo por km entre etanol e gasolina."""
     et_min, et_max = custo_etanol
     gs_min, gs_max = custo_gasolina
     resultado = f"Etanol: R${et_min:.2f} a R${et_max:.2f}/km\n"
@@ -32,16 +29,14 @@ def comparar_combustivel(custo_etanol, custo_gasolina):
         resultado += "\n⚠️ Depende do cenário. Ambos podem ser vantajosos."
     return resultado
 
-def sugestao_inteligente(preco_gasolina, consumo_etanol, consumo_gasolina):
-    """Sugere o valor máximo do etanol para compensar."""
+def sugestao_comb(preco_gasolina, consumo_etanol, consumo_gasolina):
     try:
         limite = preco_gasolina * (consumo_etanol / consumo_gasolina)
         return f"💡 Sugestão: o etanol só compensa se custar até R$ {limite:.2f} com esses consumos."
     except ZeroDivisionError:
         return "⚠️ Não foi possível calcular sugestão inteligente (divisão por zero)."
 
-def mostrar_popup_resultado(texto):
-    """Exibe janela com o resultado e opção de salvar."""
+def mostrar_resultado(texto):
     def salvar_resultado_em_txt():
         agora = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         nome_arquivo = f"resultado_combustivel_{agora}.txt"
@@ -61,8 +56,7 @@ def mostrar_popup_resultado(texto):
     tk.Button(frame_botoes, text="💾 Salvar Resultado", command=salvar_resultado_em_txt, bg="#808000", fg="white").pack(side="left", padx=10)
     tk.Button(frame_botoes, text="Fechar", command=popup.destroy).pack(side="right", padx=10)
 
-def abrir_popup_calculo_reverso():
-    """Abre janela para cálculo reverso do consumo do etanol."""
+def abrir_calculo_reverso():
     def calcular_reverso():
         try:
             preco_et = float(entry_et.get())
@@ -103,7 +97,6 @@ def abrir_popup_calculo_reverso():
     tk.Button(popup, text="Calcular", command=calcular_reverso).pack(pady=10)
 
 def limpar_campos():
-    """Limpa os campos do app."""
     entry_preco_etanol.delete(0, tk.END)
     entry_preco_gasolina.delete(0, tk.END)
     var_trajeto.set("ambos")
@@ -113,7 +106,6 @@ def limpar_campos():
         var.set("fixo")
 
 def get_consumo(trajeto, combustivel):
-    """Obtém o tipo e valores de consumo."""
     tipo = consumo_vars[f"{trajeto}_{combustivel}"].get()
     try:
         if tipo == "fixo":
@@ -128,7 +120,6 @@ def get_consumo(trajeto, combustivel):
         return None
 
 def calcular():
-    """Executa os cálculos principais."""
     try:
         preco_etanol = float(entry_preco_etanol.get())
         preco_gasolina = float(entry_preco_gasolina.get())
@@ -144,7 +135,7 @@ def calcular():
         custo_gs = calcular_resultado(preco_gasolina, *cg)
         resultado = comparar_combustivel(custo_et, custo_gs)
         if ce[0] == "fixo" and cg[0] == "fixo":
-            resultado += "\n\n" + sugestao_inteligente(preco_gasolina, ce[1], cg[1])
+            resultado += "\n\n" + sugestao_comb(preco_gasolina, ce[1], cg[1])
         resultados.append("🏙️ CIDADE:\n" + resultado)
     if var_trajeto.get() in ["estrada", "ambos"]:
         ce = get_consumo("estrada", "etanol")
@@ -154,12 +145,11 @@ def calcular():
         custo_gs = calcular_resultado(preco_gasolina, *cg)
         resultado = comparar_combustivel(custo_et, custo_gs)
         if ce[0] == "fixo" and cg[0] == "fixo":
-            resultado += "\n\n" + sugestao_inteligente(preco_gasolina, ce[1], cg[1])
+            resultado += "\n\n" + sugestao_comb(preco_gasolina, ce[1], cg[1])
         resultados.append("🚗 ESTRADA:\n" + resultado)
-    mostrar_popup_resultado("\n\n".join(resultados))
+    mostrar_resultado("\n\n".join(resultados))
 
-# === Interface gráfica ===
-
+# TELA
 root = tk.Tk()
 root.title("Comparador de Combustível")
 root.geometry("740x820")
@@ -170,7 +160,6 @@ consumo_vars = {}
 
 tk.Label(root, text="Comparador de Etanol x Gasolina", font=("Arial", 16, "bold")).pack(pady=10)
 
-# Preços
 frame_precos = tk.Frame(root)
 frame_precos.pack(pady=5)
 tk.Label(frame_precos, text="Preço Etanol (R$):").grid(row=0, column=0)
@@ -180,7 +169,6 @@ entry_preco_gasolina = tk.Entry(frame_precos)
 entry_preco_etanol.grid(row=0, column=1, padx=10)
 entry_preco_gasolina.grid(row=0, column=3, padx=10)
 
-# Trajeto
 frame_trajeto = tk.Frame(root)
 frame_trajeto.pack(pady=5)
 var_trajeto = tk.StringVar(value="ambos")
@@ -189,7 +177,6 @@ tk.Radiobutton(frame_trajeto, text="Cidade", variable=var_trajeto, value="cidade
 tk.Radiobutton(frame_trajeto, text="Estrada", variable=var_trajeto, value="estrada").pack(side="left")
 tk.Radiobutton(frame_trajeto, text="Ambos", variable=var_trajeto, value="ambos").pack(side="left")
 
-# Campos de consumo
 def criar_entrada_consumo(trajeto, combustivel):
     frame = tk.LabelFrame(root, text=f"{trajeto.capitalize()} - {combustivel.capitalize()}")
     frame.pack(padx=10, pady=5, fill="x")
@@ -210,11 +197,10 @@ for trajeto in ["cidade", "estrada"]:
     for combustivel in ["etanol", "gasolina"]:
         criar_entrada_consumo(trajeto, combustivel)
 
-# Botões principais
 frame_botoes = tk.Frame(root)
 frame_botoes.pack(pady=15)
 tk.Button(frame_botoes, text="Calcular", command=calcular, bg="green", fg="white", width=20).pack(pady=5)
 tk.Button(frame_botoes, text="Novo Cálculo", command=limpar_campos, bg="#4682b4", fg="white", width=20).pack(pady=5)
-tk.Button(frame_botoes, text="⛽ Cálculo Reverso", command=abrir_popup_calculo_reverso, bg="#ff8c00", fg="white", width=20).pack(pady=5)
+tk.Button(frame_botoes, text="⛽ Cálculo Reverso", command=abrir_calculo_reverso, bg="#ff8c00", fg="white", width=20).pack(pady=5)
 
 root.mainloop()
